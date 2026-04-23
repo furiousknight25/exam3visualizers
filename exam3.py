@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 def plot_chart(x_vals, y_vals, title, xlabel, ylabel, color="blue"):
     """Helper function to plot sequences and partial sums."""
@@ -329,27 +330,178 @@ def root_test():
     st.markdown("---")
     st.info("💡 **Concept Check:** Similar to the Ratio test, the Root test is hunting for geometric behavior. Taking the $n$-th root essentially strips away the exponent $n$ to reveal the core base of the sequence. If that core base is eventually less than 1, it shrinks to zero fast enough to converge. It's your go-to test anytime an entire algebraic expression is wrapped in an $n$-th power.")
 
+def maclaurin_series():
+    st.header("10. Maclaurin Series Expansions")
+    st.markdown("A Maclaurin series is a Taylor series centered at $a = 0$. It represents a function as an infinite polynomial.")
+    
+    func_choice = st.selectbox(
+        "Choose a function to approximate:",
+        ["1 / (1 - x)", "e^x", "sin(x)", "cos(x)", "arctan(x)"]
+    )
+    
+    n_terms = st.slider("Number of non-zero terms (N)", min_value=1, max_value=20, value=3, step=1)
+
+    plot_col, text_col = st.columns([2, 1])
+
+    with plot_col:
+        # Define x values based on the function to show interval of convergence boundaries clearly
+        if func_choice in ["1 / (1 - x)", "arctan(x)"]:
+            x_vals = np.linspace(-2, 2, 400)
+            y_lim = (-5, 5)
+        else:
+            x_vals = np.linspace(-3 * np.pi, 3 * np.pi, 400)
+            y_lim = (-5, 5) if "sin" in func_choice or "cos" in func_choice else (-2, 20)
+
+        y_true = np.zeros_like(x_vals)
+        y_approx = np.zeros_like(x_vals)
+
+        if func_choice == "1 / (1 - x)":
+            # Avoid division by zero strictly at x=1 for the true function line
+            valid_x = x_vals != 1
+            y_true[valid_x] = 1 / (1 - x_vals[valid_x])
+            y_true[~valid_x] = np.nan
+            for n in range(n_terms):
+                y_approx += x_vals ** n
+                
+        elif func_choice == "e^x":
+            y_true = np.exp(x_vals)
+            for n in range(n_terms):
+                y_approx += (x_vals ** n) / math.factorial(n)
+                
+        elif func_choice == "sin(x)":
+            y_true = np.sin(x_vals)
+            for n in range(n_terms):
+                y_approx += ((-1)**n * x_vals**(2*n + 1)) / math.factorial(2*n + 1)
+                
+        elif func_choice == "cos(x)":
+            y_true = np.cos(x_vals)
+            for n in range(n_terms):
+                y_approx += ((-1)**n * x_vals**(2*n)) / math.factorial(2*n)
+                
+        elif func_choice == "arctan(x)":
+            y_true = np.arctan(x_vals)
+            for n in range(n_terms):
+                y_approx += ((-1)**n * x_vals**(2*n + 1)) / (2*n + 1)
+
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.plot(x_vals, y_true, label=f"True: {func_choice}", color="black", linewidth=2)
+        ax.plot(x_vals, y_approx, label=f"Approx (N={n_terms})", color="blue", linestyle="--", linewidth=2)
+        
+        # Highlight Interval of Convergence
+        if func_choice in ["1 / (1 - x)", "arctan(x)"]:
+            ax.axvspan(-1, 1, color='green', alpha=0.1, label='Interval of Convergence [-1, 1]')
+            
+        ax.set_ylim(y_lim)
+        ax.set_title(f"Maclaurin Series Approximation for {func_choice}")
+        ax.legend()
+        ax.grid(True, linestyle=':', alpha=0.6)
+        st.pyplot(fig)
+
+    with text_col:
+        st.subheader("Series Definition")
+        if func_choice == "1 / (1 - x)":
+            st.latex(r"\sum_{n=0}^{\infty} x^n = 1 + x + x^2 + \dots")
+            st.info("**Interval:** $(-1, 1)$\n\nNotice how the blue approximation goes completely wild outside the green shaded interval. The Ratio Test proves this series diverges when $|x| \ge 1$.")
+        elif func_choice == "e^x":
+            st.latex(r"\sum_{n=0}^{\infty} \frac{x^n}{n!} = 1 + x + \frac{x^2}{2!} + \dots")
+            st.info("**Interval:** $(-\infty, \infty)$\n\nBecause factorials grow vastly faster than exponentials, the terms shrink to 0 for *any* $x$.")
+        elif func_choice == "sin(x)":
+            st.latex(r"\sum_{n=0}^{\infty} (-1)^n \frac{x^{2n+1}}{(2n+1)!}")
+            st.info("**Interval:** $(-\infty, \infty)$\n\nContains only odd powers, mirroring the odd symmetry of the sine wave.")
+        elif func_choice == "cos(x)":
+            st.latex(r"\sum_{n=0}^{\infty} (-1)^n \frac{x^{2n}}{(2n)!}")
+            st.info("**Interval:** $(-\infty, \infty)$\n\nContains only even powers, mirroring the even symmetry of the cosine wave.")
+        elif func_choice == "arctan(x)":
+            st.latex(r"\sum_{n=0}^{\infty} (-1)^n \frac{x^{2n+1}}{2n+1}")
+            st.info("**Interval:** $[-1, 1]$\n\nNotice the lack of factorials compared to sine! This weaker denominator restricts its convergence.")
+
+    st.markdown("---")
+    st.info("💡 **Concept Check:** An Interval of Convergence is the specific window on the x-axis where the infinite polynomial matches the original function. Inside the interval, adding more terms refines the fit. Outside the interval, adding more terms causes the polynomial to explode toward infinity, completely failing to match the function.")
+
+def taylors_inequality():
+    st.header("11. Taylor's Inequality (Error Bound)")
+    st.markdown(r"If $|f^{(n+1)}(x)| \le M$ for $|x - a| \le d$, then the remainder $R_n(x)$ satisfies: $\quad |R_n(x)| \le \frac{M}{(n+1)!} |x - a|^{n+1}$")
+    st.markdown("This formula guarantees the maximum possible error when cutting off a Taylor series after $n$ terms.")
+
+    st.markdown("### Interactive Error Bound: Approximating $e^x$ at $x = 1$")
+    st.markdown("Let's say we want to calculate $e^1$ (Euler's number $\\approx 2.718$) using a Maclaurin series ($a=0$).")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        n_terms = st.slider("Degree of Taylor Polynomial (n)", 1, 10, 3)
+    with col2:
+        x_val = st.slider("Evaluation point (x)", 0.0, 3.0, 1.0, 0.1)
+
+    plot_col, text_col = st.columns([2, 1])
+    
+    with plot_col:
+        # Calculate actual error vs bounded error
+        M = np.exp(x_val) # The maximum of the (n+1)th derivative of e^x on [0, x] is e^x
+        error_bound = (M / math.factorial(n_terms + 1)) * (x_val ** (n_terms + 1))
+        
+        approx_val = sum((1 ** i) / math.factorial(i) for i in range(n_terms + 1))
+        actual_val = np.exp(1)
+        actual_error = abs(actual_val - approx_val)
+
+        st.subheader("Calculation Breakdown")
+        st.latex(rf"M = \max(f^{{({n_terms+1})}}(x)) \text{{ on }} [0, {x_val}] = e^{{{x_val}}} \approx {M:.3f}")
+        st.latex(rf"|R_{{{n_terms}}}({x_val})| \le \frac{{{M:.3f}}}{{({n_terms}+1)!}} |{x_val} - 0|^{{{n_terms}+1}} = {error_bound:.5f}")
+        
+    with text_col:
+        st.subheader("Analysis")
+        st.success(f"**Max Guaranteed Error:** {error_bound:.5f}")
+        st.info(f"**Why:** Taylor's Inequality proves mathematically that if you stop at $n={n_terms}$, your approximation of $e^{{{x_val}}}$ will absolutely not be off by more than $\\pm {error_bound:.5f}$. As $n$ increases, the massive factorial in the denominator crushes the error down to zero.")
+        
+    st.markdown("---")
+    st.info("💡 **Concept Check:** Think of $R_n(x)$ as a 'warranty' on your math. When engineers use polynomials to program calculators to compute sine or cosine, they use Taylor's Inequality to figure out exactly how many terms $n$ they need to calculate to guarantee the result is perfectly accurate to 10 decimal places.")
+
 def main():
     st.set_page_config(page_title="Series Convergence Tool", layout="wide")
     st.sidebar.title("Mathematical Learning Tool")
-    st.sidebar.markdown("### Series Convergence Tests")
     
     module_selection = st.sidebar.radio(
         "Select a module to explore:",
-        ["Test for Divergence", "Geometric Series", "p-series", "Direct Comparison Test", "Limit Comparison Test", "Integral Test", "Alternating Series Test", "Ratio Test", "Root Test"]
+        [
+            "Test for Divergence", 
+            "Geometric Series", 
+            "p-series", 
+            "Direct Comparison Test", 
+            "Limit Comparison Test", 
+            "Integral Test", 
+            "Alternating Series Test", 
+            "Ratio Test", 
+            "Root Test",
+            "Maclaurin Series Expansions",
+            "Taylor's Inequality (Remainder)"
+        ]
     )
+    
     st.sidebar.markdown("---")
     st.sidebar.info("Adjust the sliders in each module to see how parameters affect mathematical convergence.")
 
-    if module_selection == "Test for Divergence": test_for_divergence()
-    elif module_selection == "Geometric Series": geometric_series()
-    elif module_selection == "p-series": p_series()
-    elif module_selection == "Direct Comparison Test": direct_comparison_test()
-    elif module_selection == "Limit Comparison Test": limit_comparison_test()
-    elif module_selection == "Integral Test": integral_test()
-    elif module_selection == "Alternating Series Test": alternating_series_test()
-    elif module_selection == "Ratio Test": ratio_test()
-    elif module_selection == "Root Test": root_test()
+    # Route the sidebar selection to the correct function
+    if module_selection == "Test for Divergence":
+        test_for_divergence()
+    elif module_selection == "Geometric Series":
+        geometric_series()
+    elif module_selection == "p-series":
+        p_series()
+    elif module_selection == "Direct Comparison Test":
+        direct_comparison_test()
+    elif module_selection == "Limit Comparison Test":
+        limit_comparison_test()
+    elif module_selection == "Integral Test":
+        integral_test()
+    elif module_selection == "Alternating Series Test":
+        alternating_series_test()
+    elif module_selection == "Ratio Test":
+        ratio_test()
+    elif module_selection == "Root Test":
+        root_test()
+    elif module_selection == "Maclaurin Series Expansions":
+        maclaurin_series()
+    elif module_selection == "Taylor's Inequality (Remainder)":
+        taylors_inequality()
 
 if __name__ == "__main__":
     main()
