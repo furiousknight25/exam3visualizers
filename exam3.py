@@ -45,6 +45,9 @@ def test_for_divergence():
                 f"**Result:** Inconclusive.\n\n"
                 f"**Why:** Because $\\lim_{{n \\to \\infty}} a_n = 0$, the test tells us nothing. Another test is required."
             )
+            
+    st.markdown("---")
+    st.info("💡 **Concept Check:** Think of the Test for Divergence as your 'first-pass filter'. It can only tell you if a series *diverges*. If the individual terms you are adding together don't eventually shrink down to zero, your total sum will just keep growing to infinity. But beware: just because terms shrink to zero doesn't guarantee convergence—you'll need another test to be sure!")
 
 def geometric_series():
     st.header("2. Geometric Series")
@@ -79,6 +82,9 @@ def geometric_series():
                 f"**Result:** Divergent.\n\n"
                 f"**Why:** $|r| = {abs_r:.1f} \\geq 1$, so the terms do not shrink fast enough toward zero."
             )
+            
+    st.markdown("---")
+    st.info("💡 **Concept Check:** Geometric series are all about constant multiplicative scaling—like a bouncing ball that loses exactly half its height on every bounce. As long as the multiplier (the ratio $r$) is strictly between -1 and 1, the sequence shrinks fast enough that we can confidently calculate the exact infinite sum using a simple formula.")
 
 def p_series():
     st.header("3. p-series")
@@ -107,9 +113,12 @@ def p_series():
                 f"**Why:** $p = {p:.1f} \\leq 1$, the terms do not decrease quickly enough. The sum will eventually grow to infinity."
             )
 
+    st.markdown("---")
+    st.info("💡 **Concept Check:** The p-series is the ultimate 'benchmark' test. It perfectly illustrates the boundary between converging and diverging. The harmonic series ($p=1$) shrinks to zero, but just barely too slowly, so its sum balloons to infinity. But if you increase the power by even a fraction (like $p=1.01$), it crosses the threshold, shrinks fast enough, and converges.")
+
 def direct_comparison_test():
     st.header("4. Direct Comparison Test")
-    st.markdown("Suppose $0 \le a_n \le b_n$. If $\\sum b_n$ converges, $\\sum a_n$ converges. If $\\sum a_n$ diverges, $\\sum b_n$ diverges.")
+    st.markdown(r"Suppose $0 \leq a_n \leq b_n$. If $\sum b_n$ converges, $\sum a_n$ converges. If $\sum a_n$ diverges, $\sum b_n$ diverges.")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -127,7 +136,8 @@ def direct_comparison_test():
         fig, ax = plt.subplots(figsize=(8, 3))
         ax.plot(n_vals, b_n, label=f"$b_n = 1/n^{{{p}}}$", color="blue", marker='o', linestyle='--')
         ax.plot(n_vals, a_n, label=f"$a_n = 1/(n^{{{p}}} + {c})$", color="red", marker='x', linestyle='-')
-        ax.set_title("Visual Proof: $a_n \le b_n$")
+        
+        ax.set_title(r"Visual Proof: $a_n \leq b_n$")
         ax.set_xlabel("n")
         ax.legend()
         ax.grid(True, linestyle=':', alpha=0.6)
@@ -136,13 +146,16 @@ def direct_comparison_test():
     with text_col:
         st.subheader("Analysis")
         if c >= 0:
-            st.success(f"**Visual Proof:** $a_n \le b_n$ for all $n$ because adding a positive constant ($c = {c}$) to the denominator makes the overall fraction smaller.")
+            st.success(rf"**Visual Proof:** $a_n \leq b_n$ for all $n$ because adding a positive constant ($c = {c}$) to the denominator makes the overall fraction smaller.")
             if p > 1:
-                st.info(f"**Result:** Convergent. $\\sum b_n$ converges ($p > 1$), so $\\sum a_n$ must also converge.")
+                st.info(rf"**Result:** Convergent. $\sum b_n$ converges ($p > 1$), so $\sum a_n$ must also converge.")
             else:
-                st.warning(f"**Result:** Inconclusive. $\\sum b_n$ diverges, knowing $a_n$ is smaller doesn't help.")
+                st.warning(rf"**Result:** Inconclusive. $\sum b_n$ diverges, knowing $a_n$ is smaller doesn't help.")
         else:
             st.error("If $c < 0$, then $a_n$ may be greater than $b_n$, breaking the condition.")
+
+    st.markdown("---")
+    st.info("💡 **Concept Check:** This test relies on simple bounding logic: if your series is always smaller than something finite, your series must also be finite (convergent). Conversely, if you are always larger than something infinite, you must also be infinite (divergent). It's all about finding the right known 'benchmark' series to compare your unknown series against.")
 
 def limit_comparison_test():
     st.header("5. Limit Comparison Test")
@@ -170,6 +183,9 @@ def limit_comparison_test():
             f"**Why:** We found $L = {L_val:.3f}$. Since $0 < L < \\infty$, $\\sum a_n$ behaves exactly like $\\sum b_n$. "
             f"Because $b_n$ is the divergent harmonic series, $\\sum a_n$ must also diverge."
         )
+
+    st.markdown("---")
+    st.info("💡 **Concept Check:** Direct Comparison can be frustrating when the math inequalities point the wrong way. The Limit Comparison Test fixes this! It looks at the *long-term behavior* of a series. By stripping away all the messy lower-degree terms and finding a finite limit, we prove that the 'core' of the sequence behaves exactly the same as a known simpler series at infinity.")
 
 def integral_test():
     st.header("6. Integral Test")
@@ -201,6 +217,9 @@ def integral_test():
         else:
             st.error(f"**Result:** Divergent.\n\n**Why:** The integral diverges to infinity. Because the continuous area is infinite, the discrete sum $\\sum a_n$ must also diverge.")
 
+    st.markdown("---")
+    st.info("💡 **Concept Check:** The Integral Test beautifully bridges the gap between discrete math (sums) and continuous calculus (integrals). By replacing your discrete sequence $n$ with a continuous variable $x$, you can use the area under the curve to judge the sum. Because the discrete bars fit neatly inside the continuous curve, finite area guarantees a finite sum.")
+
 def alternating_series_test():
     st.header("7. Alternating Series Test")
     st.markdown("Requires: 1. $b_{n+1} \\le b_n$ (decreasing) and 2. $\\lim_{n \\to \\infty} b_n = 0$")
@@ -230,6 +249,9 @@ def alternating_series_test():
             st.error(f"**Result:** Divergent.\n\nTerms alternate between 1 and -1. Limit is not 0.")
         else:
             st.error(f"**Result:** Divergent.\n\nTerms grow as n increases. Fails both conditions.")
+
+    st.markdown("---")
+    st.info("💡 **Concept Check:** Alternating series have a built-in 'cancellation effect'. Because every other term subtracts from the total, the sum doesn't run away to infinity as easily as a standard series. As long as the steps you take keep getting smaller (decreasing) and eventually reach zero, you will eventually zigzag into a specific, finite value.")
 
 def ratio_test():
     st.header("8. Ratio Test")
@@ -264,6 +286,9 @@ def ratio_test():
             st.error(f"**Result:** Divergent. $L > 1$.")
         else:
             st.warning(f"**Result:** Inconclusive. $L = 1$. ")
+
+    st.markdown("---")
+    st.info("💡 **Concept Check:** The Ratio Test asks one fundamental question: 'In the long run, does this series behave like a converging geometric series?' By dividing the next term by the current term, we find the eventual multiplier. This test is the absolute best tool in your arsenal anytime you see factorials ($n!$) or exponential functions ($c^n$).")
 
 def root_test():
     st.header("9. Root Test")
@@ -300,6 +325,9 @@ def root_test():
             st.error(f"**Result:** Divergent. $L > 1$.")
         else:
             st.warning(f"**Result:** Inconclusive. $L = 1$. ")
+            
+    st.markdown("---")
+    st.info("💡 **Concept Check:** Similar to the Ratio test, the Root test is hunting for geometric behavior. Taking the $n$-th root essentially strips away the exponent $n$ to reveal the core base of the sequence. If that core base is eventually less than 1, it shrinks to zero fast enough to converge. It's your go-to test anytime an entire algebraic expression is wrapped in an $n$-th power.")
 
 def main():
     st.set_page_config(page_title="Series Convergence Tool", layout="wide")
