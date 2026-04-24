@@ -455,6 +455,90 @@ def taylors_inequality():
     st.markdown("---")
     st.info("💡 **Concept Check:** Think of $R_n(x)$ as a 'warranty' on your math. When engineers use polynomials to program calculators to compute sine or cosine, they use Taylor's Inequality to figure out exactly how many terms $n$ they need to calculate to guarantee the result is perfectly accurate to 10 decimal places.")
 
+def radius_and_interval_of_convergence():
+    st.header("12. Radius and Interval of Convergence ($x$ vs $n$)")
+    st.markdown("This module shows how choosing a specific input **$x$** determines whether the infinite sequence of steps **$n$** shrinks or explodes.")
+
+    # Interactive Sliders
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        center_a = st.slider("Center (a)", min_value=-5.0, max_value=5.0, value=0.0, step=0.5)
+    with col2:
+        radius_R = st.slider("Radius of Convergence (R)", min_value=0.5, max_value=5.0, value=2.0, step=0.5)
+    with col3:
+        # THE KEY ADDITION: Let the user lock in an X
+        test_x = st.slider("Pick a specific 'x' to test", min_value=-8.0, max_value=8.0, value=1.0, step=0.25)
+
+    st.markdown("---")
+
+    plot_col, text_col = st.columns([2, 1])
+
+    with plot_col:
+        # CHART 1: THE X DOMAIN (The Steering Wheel)
+        fig1, ax1 = plt.subplots(figsize=(8, 2))
+        ax1.axhline(0, color='black', linewidth=1.5)
+        
+        left_val = center_a - radius_R
+        right_val = center_a + radius_R
+        
+        # Plot zones
+        ax1.plot([-10, left_val], [0, 0], color='red', linewidth=4, alpha=0.5)
+        ax1.plot([right_val, 10], [0, 0], color='red', linewidth=4, alpha=0.5)
+        ax1.plot([left_val, right_val], [0, 0], color='green', linewidth=4, alpha=0.5)
+        
+        # Endpoints and Center
+        ax1.plot(center_a, 0, marker='o', color='blue', markersize=8, label="Center (a)")
+        ax1.plot(left_val, 0, marker='|', color='black', markersize=15, markeredgewidth=2)
+        ax1.plot(right_val, 0, marker='|', color='black', markersize=15, markeredgewidth=2)
+        
+        # PLOT THE CHOSEN X
+        ax1.plot(test_x, 0, marker='X', color='purple', markersize=12, label=f"Your Test x = {test_x}")
+        
+        ax1.set_xlim(center_a - radius_R - 3, center_a + radius_R + 3)
+        ax1.set_ylim(-1, 1)
+        ax1.set_yticks([])
+        ax1.set_title("Graph 1: Where is your 'x' on the Domain?")
+        ax1.legend(loc="upper right")
+        st.pyplot(fig1)
+
+        # CHART 2: THE N SEQUENCE (The Gas Pedal)
+        # We model a sequence based on the standard geometric core: ((x-a)/R)^n
+        fig2, ax2 = plt.subplots(figsize=(8, 3))
+        n_vals = np.arange(1, 21)
+        
+        # Calculate the base of our sequence using the chosen x
+        base_ratio = (test_x - center_a) / radius_R
+        
+        # Prevent massive overflow in the plot by capping it
+        if abs(base_ratio) > 1.3:
+            terms = [base_ratio**n if abs(base_ratio**n) < 500 else np.nan for n in n_vals]
+        else:
+            terms = base_ratio**n_vals
+            
+        ax2.plot(n_vals, terms, marker='o', linestyle='-', color='purple')
+        ax2.axhline(0, color='black', linewidth=0.8, linestyle='--')
+        ax2.set_title(f"Graph 2: How the series terms behave as n → ∞ (for x = {test_x})")
+        ax2.set_xlabel("n (Index of summation)")
+        ax2.set_ylabel("Size of term added")
+        ax2.grid(True, linestyle=':', alpha=0.6)
+        st.pyplot(fig2)
+
+    with text_col:
+        st.subheader("The Connection")
+        st.markdown(f"**You chose $x = {test_x}$**")
+        
+        distance = abs(test_x - center_a)
+        st.markdown(f"Distance from center: $|{test_x} - {center_a}| = {distance}$")
+        
+        if distance < radius_R:
+            st.success(f"**Inside the Radius ({distance} < {radius_R})**\n\nNotice in Graph 2 how the terms rapidly shrink to 0 as $n$ increases. Because you picked a 'safe' $x$, the infinite loop succeeds and converges to a finite number.")
+        elif distance > radius_R:
+            st.error(f"**Outside the Radius ({distance} > {radius_R})**\n\nNotice in Graph 2 how the terms explode toward infinity as $n$ increases. Because you picked an $x$ too far from the center, the loop fails.")
+        else:
+            st.warning(f"**Exactly on the Boundary ({distance} == {radius_R})**\n\nNotice in Graph 2 the terms bounce endlessly between 1 and -1, or stay flat at 1. They don't shrink to 0 fast enough. The Ratio test is broken here!")
+
+    st.markdown("---")
+    st.info("💡 **Concept Check:** By moving the `x` slider, you are changing the specific numbers that the `n` loop is forced to add together. If you choose an `x` that makes the base number larger than 1, raising it to the power of `n` guarantees it will blow up!")
 def main():
     st.set_page_config(page_title="Series Convergence Tool", layout="wide")
     st.sidebar.title("Mathematical Learning Tool")
@@ -472,7 +556,8 @@ def main():
             "Ratio Test", 
             "Root Test",
             "Maclaurin Series Expansions",
-            "Taylor's Inequality (Remainder)"
+            "Taylor's Inequality (Remainder)",
+            "Radius and Interval of Convergence" # <-- ADDED HERE
         ]
     )
     
@@ -502,6 +587,8 @@ def main():
         maclaurin_series()
     elif module_selection == "Taylor's Inequality (Remainder)":
         taylors_inequality()
+    elif module_selection == "Radius and Interval of Convergence": 
+        radius_and_interval_of_convergence() 
 
 if __name__ == "__main__":
     main()
